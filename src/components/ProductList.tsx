@@ -4,7 +4,7 @@ import { useMutation, useQuery } from '@apollo/client';
 import { GET_PRODUCTS } from '../graphql/queries';
 import { ADD_ITEM_TO_ORDER } from '../graphql/mutations';
 import { useOrder } from '../context/OrderContext';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 type Product = {
@@ -103,6 +103,8 @@ export const ProductList: React.FC = () => {
   const [addItemToOrder] = useMutation(ADD_ITEM_TO_ORDER);
   const { setOrderDetails } = useOrder();
 
+  console.log('data:', data);
+
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
 
@@ -131,9 +133,16 @@ export const ProductList: React.FC = () => {
 
   const notify = (message = "Thanks for your purchase!") => toast(message);
 
+  const validProducts = data?.products.items.filter((product: Product) => {
+    const hasPreview = product.assets[0]?.preview;
+    const hasDescription = product.description?.trim().length > 0;
+    const validPrice = product.variants[0]?.price > 0;
+    return hasPreview && hasDescription && validPrice;
+  });
+
   return (
     <ProductGrid>
-      {data.products.items.map((product: Product) => (
+      {validProducts.map((product: Product) => (
         <ProductCard key={product.id.toString()}>
           <ProductImage src={product.assets[0].preview} alt={product.name} />
           <ProductName>{product.name}</ProductName>
